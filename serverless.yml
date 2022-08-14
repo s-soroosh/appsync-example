@@ -5,10 +5,40 @@ provider:
   name: aws
   runtime: nodejs16.x
   profile: personal
+  region: eu-central-1
 
 functions:
   hello:
     handler: handler.hello
 
+custom:
+  appSync:
+    name: helloApi
+    authenticationType: API_KEY
+    schema: # schema file or array of files to merge, defaults to schema.graphql (glob pattern is acceptable)
+    apiKeys:
+      - name: john # name of the api key
+        description: 'My api key'
+        expiresAfter: 30d # api key life time
+      - name: jane
+        description: "Jane's api key"
+        expiresAt: '2023-03-09T16:00:00+00:00'
+    # Array of additional authentication providers
+    mappingTemplatesLocation: # defaults to mapping-templates
+    dataSources:
+      - type: AWS_LAMBDA
+        name: lambdaSource
+        description: 'Lambda DataSource'
+        config:
+          functionName: hello
+
+    mappingTemplates:
+      - type: Query
+        request: './request-mapping.vtl'
+        response: false
+        dataSource: lambdaSource
+        field: singlePost
+
 plugins:
   - serverless-esbuild
+  - serverless-appsync-plugin
